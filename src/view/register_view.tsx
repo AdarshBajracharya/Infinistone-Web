@@ -1,17 +1,39 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import backgroundImage from '../assets/background_login.jpg';
+import { useRegister } from './query'; // Adjust the import path
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 
 const Register: React.FC = () => {
   const { register, handleSubmit } = useForm();
   const [profilePicture, setProfilePicture] = useState<string | null>(null); // State to store the uploaded image
+  const registerMutation = useRegister(); // Initialize the useRegister mutation
+  const navigate = useNavigate(); // Initialize useNavigate for redirection
 
   const onSubmit = (data: any) => {
-    console.log(data);
-    // Handle form submission, including the profile picture
+    // Include the profile picture in the form data
+    const formData = {
+      fname: data.firstName,
+      lname: data.lastName,
+      email: data.email,
+      phone: data.phoneNumber,
+      address: data.address,
+      password: data.password,
+      image: profilePicture, // Add the profile picture (base64 string)
+    };
+
+    // Call the register mutation
+    registerMutation.mutate(formData, {
+      onSuccess: (response) => {
+        console.log("Registration successful:", response.data);
+        navigate("/"); // Redirect to the login page after successful registration
+      },
+      onError: (error) => {
+        console.error("Registration failed:", error);
+      },
+    });
   };
 
-  // Handle profile picture upload
   const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -30,7 +52,7 @@ const Register: React.FC = () => {
     >
       <div className="bg-white/20 backdrop-blur-md p-8 rounded-2xl shadow-lg w-[480px] text-black">
         {/* Profile Picture Upload */}
-        <div className="flex flex-col items-center mb-4"> {/* Reduced margin-bottom */}
+        <div className="flex flex-col items-center mb-4">
           <label htmlFor="profilePicture" className="cursor-pointer">
             {profilePicture ? (
               <img
@@ -53,7 +75,7 @@ const Register: React.FC = () => {
           />
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-3"> {/* Reduced spacing to space-y-3 */}
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-3">
           <input
             type="text"
             {...register("firstName")}
@@ -106,8 +128,9 @@ const Register: React.FC = () => {
           <button
             type="submit"
             className="mt-4 bg-black py-3 rounded-full hover:bg-gray-900 transition-all mx-auto w-32 text-white"
+            disabled={registerMutation.isPending} // Disable button while loading
           >
-            Register
+            {registerMutation.isPending ? "Registering..." : "Register"}
           </button>
         </form>
 
