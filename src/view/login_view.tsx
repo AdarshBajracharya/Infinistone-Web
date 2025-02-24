@@ -1,29 +1,37 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa'; // Import icons
+import { useNavigate } from 'react-router-dom'; 
+import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa'; 
 import backgroundImage from '../assets/background_login.jpg';
 import logo from '../assets/logo.png';
-import { useLogin } from './query'; // Import useLogin mutation
+import { useLogin } from './query'; 
 
 const Login: React.FC = () => {
   const { register, handleSubmit } = useForm();
-  const navigate = useNavigate(); // Initialize useNavigate
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
-  const loginMutation = useLogin(); // Initialize the login mutation
+  const navigate = useNavigate(); 
+  const [showPassword, setShowPassword] = useState(false); 
+  const loginMutation = useLogin(); 
 
   const onSubmit = (data: any) => {
     loginMutation.mutate(data, {
       onSuccess: (response) => {
         console.log('Login Success:', response);
-        localStorage.setItem('token', response.data.token); // Store token in localStorage
-        navigate('/home'); // Navigate to the Dashboard
+  
+        const token = response.data.token;
+        const userId = response.data.userId; 
+  
+        localStorage.setItem('loginToken', token); 
+        localStorage.setItem('userId', userId); 
+  
+        navigate('/home'); 
       },
       onError: (error) => {
         console.error('Login Failed:', error);
       },
     });
   };
+  
+  
 
   return (
     <div
@@ -37,7 +45,6 @@ const Login: React.FC = () => {
           className="w-50 h-50 mx-auto mb-1 object-contain"
         />
 
-        {/* Display error message if login fails */}
         {loginMutation.isError && (
           <div className="text-red-500 text-center mb-4">
             Login failed. Please check your credentials.
@@ -45,7 +52,7 @@ const Login: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-6">
-          {/* Email Field */}
+
           <div className="flex items-center bg-white/30 border border-black/40 rounded-lg focus-within:ring-2 focus-within:ring-white/50">
             <span className="px-3 text-black/50">
               <FaUser />
@@ -58,7 +65,6 @@ const Login: React.FC = () => {
             />
           </div>
 
-          {/* Password Field */}
           <div className="flex items-center bg-white/30 border border-black/40 rounded-lg focus-within:ring-2 focus-within:ring-white/50">
             <span className="px-3 text-black/50">
               <FaLock />
@@ -78,7 +84,6 @@ const Login: React.FC = () => {
             </button>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="mt-4 bg-black py-3 rounded-full hover:bg-gray-900 transition-all mx-auto w-32 text-white"
@@ -88,7 +93,6 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        {/* Register Link */}
         <p className="text-center text-black mt-4">
           Don't have an account?{' '}
           <a href="/register" className="text-black font-semibold hover:underline">
