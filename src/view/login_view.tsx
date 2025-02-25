@@ -18,18 +18,26 @@ const Login: React.FC = () => {
         console.log('Login Success:', response);
   
         const token = response.data.token;
-        const userId = response.data.userId; 
+        const userId = response.data.userId;
+        const isAdmin = response.data.isAdmin;
   
-        localStorage.setItem('loginToken', token); 
-        localStorage.setItem('userId', userId); 
+        console.log('isAdmin:', isAdmin); // 👈 Check the actual value
   
-        navigate('/home'); 
+        localStorage.setItem('loginToken', token);
+        localStorage.setItem('userId', userId);
+  
+        if (isAdmin === 'true' || isAdmin === true) { // Handles both string and boolean
+          navigate('/admin');
+        } else {
+          navigate('/home');
+        }
       },
       onError: (error) => {
         console.error('Login Failed:', error);
       },
     });
   };
+  
   
   
 
