@@ -1,187 +1,186 @@
-import React, { useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Box, Plane } from '@react-three/drei';
-import Header from './header';
+import React, { useRef, useState, useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import * as THREE from "three";
+import { useGetProducts } from "./query"; // Your custom hook for fetching products
+import Header from "./header";
+import Select from "react-select";
 
-// Room Component
-const Room = ({ dimensions, wallColor, floorColor }: { dimensions: { width: number, height: number, depth: number }, wallColor: string, floorColor: string }) => {
+const Floor: React.FC<{ texture: THREE.Texture | null; width: number; depth: number }> = ({ texture, width, depth }) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  if (texture) {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(1, 1);
+  }
+
   return (
-    <>
-      {/* Room Walls */}
-      <Box args={[dimensions.width, dimensions.height, 0.2]} position={[0, dimensions.height / 2, -dimensions.depth / 2]}>
-        <meshStandardMaterial color={wallColor} />
-      </Box>
-      <Box args={[dimensions.width, dimensions.height, 0.2]} position={[0, dimensions.height / 2, dimensions.depth / 2]}>
-        <meshStandardMaterial color={wallColor} />
-      </Box>
-      <Box args={[0.2, dimensions.height, dimensions.depth]} position={[-dimensions.width / 2, dimensions.height / 2, 0]}>
-        <meshStandardMaterial color={wallColor} />
-      </Box>
-      <Box args={[0.2, dimensions.height, dimensions.depth]} position={[dimensions.width / 2, dimensions.height / 2, 0]}>
-        <meshStandardMaterial color={wallColor} />
-      </Box>
-
-      {/* Floor */}
-      <Plane args={[dimensions.width, dimensions.depth]} position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <meshStandardMaterial color={floorColor} />
-      </Plane>
-    </>
+    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+      <planeGeometry args={[width, depth]} />
+      {texture && <meshStandardMaterial attach="material" map={texture} roughness={0.5} metalness={0.5} />}
+    </mesh>
   );
 };
 
-// Stairs Component
-const Stairs = ({ numSteps, stepHeight, roomDimensions, stairColor }: { numSteps: number, stepHeight: number, roomDimensions: { width: number, depth: number }, stairColor: string }) => {
-  const stepWidth = roomDimensions.width / 4;
-  const stepDepth = roomDimensions.depth / 5;
+const Wall: React.FC<{ texture: THREE.Texture | null; position: [number, number, number]; rotation: [number, number, number]; width: number; height: number }> = ({
+  texture,
+  position,
+  rotation,
+  width,
+  height,
+}) => {
+  const meshRef = useRef<THREE.Mesh>(null);
 
-  const stairsArray = [];
-  for (let i = 0; i < numSteps; i++) {
-    stairsArray.push(
-      <Box
-        key={i}
-        args={[stepWidth, stepHeight, stepDepth]}
-        position={[0, stepHeight * (i + 1), roomDimensions.depth / 2 - stepDepth * (i + 1)]}
-      >
-        <meshStandardMaterial color={stairColor} />
-      </Box>
-    );
+  if (texture) {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(1, 1);
   }
 
-  return <>{stairsArray}</>;
+  return (
+    <mesh ref={meshRef} position={position} rotation={rotation}>
+      <planeGeometry args={[width, height]} />
+      {texture && <meshStandardMaterial attach="material" map={texture} roughness={0.5} metalness={0.5} />}
+    </mesh>
+  );
 };
 
-const Visualizer = () => {
-  const [view, setView] = useState<'room' | 'stairs'>('room');
-  const [dimensions, setDimensions] = useState({ width: 10, height: 5, depth: 10 });
-  const [stairsSettings, setStairsSettings] = useState({ numSteps: 5, stepHeight: 0.5 });
-  const [wallColor, setWallColor] = useState('#BFEFFF'); // Light pastel blue
-  const [floorColor, setFloorColor] = useState('#D3F8D3'); // Light pastel green
-  const [stairColor, setStairColor] = useState('#D2B48C'); // Light brown/tan
+const ThreeDModel: React.FC = () => {
+  const [floorTexture, setFloorTexture] = useState<THREE.Texture | null>(null);
+  const [wallTexture, setWallTexture] = useState<THREE.Texture | null>(null);
+  const [width, setWidth] = useState(10);
+  const [depth, setDepth] = useState(10);
+  const [height, setHeight] = useState(10);
+
+  const { data: products, isLoading, error } = useGetProducts();
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const floorImage = products[0].image; // Assuming you're using the first product's image for the floor
+      const wallImage = products[1]?.image; // Using the second product's image for the wall, if available
+
+      const loader = new THREE.TextureLoader();
+      if (floorImage) {
+        loader.load(floorImage.startsWith("data:image") ? floorImage : `http://localhost:3000/uploads/${floorImage}`, (texture) => {
+          setFloorTexture(texture);
+        });
+      }
+      if (wallImage) {
+        loader.load(wallImage.startsWith("data:image") ? wallImage : `http://localhost:3000/uploads/${wallImage}`, (texture) => {
+          setWallTexture(texture);
+        });
+      }
+    }
+  }, [products]);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) {
+    console.error(error);
+    return <div>Error loading textures</div>;
+  }
+
+  const handleTextureChange = (textureURL: string, isFloor: boolean) => {
+    if (!textureURL) return; // Early return if textureURL is null or empty
+
+    const loader = new THREE.TextureLoader();
+    loader.load(textureURL, (texture) => {
+      if (isFloor) {
+        setFloorTexture(texture);
+      } else {
+        setWallTexture(texture);
+      }
+    });
+  };
+
+  const productOptions = products?.map((product) => ({
+    label: product.item_name,
+    value: product.image,
+    imageUrl: product.image.startsWith("data:image") ? product.image : `http://localhost:3000/uploads/${product.image}`,
+  })) || [];
+
+  // Use formatOptionLabel to customize the display of options
+  const customFormatOptionLabel = (data: any) => (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <img src={data.imageUrl} alt={data.label} style={{ width: 30, height: 30, marginRight: 10 }} />
+      {data.label}
+    </div>
+  );
 
   return (
-    
-    <div className="h-screen bg-gray-50">
-        <Header />
+    <div className="h-screen w-full bg-white flex flex-col items-center p-4">
+      <Header />
+      <div className="w-full h-[75vh]">
+      <Canvas camera={{ position: [width * 1.5, height * 1.5, depth * 1.5], fov: 50 }}>
+        {/* Lighting */}
+        <ambientLight intensity={4} /> {/* Increased ambient light */}
+        <pointLight position={[10, 10, 10]} intensity={3} /> {/* Increased point light */}
+        <directionalLight position={[0, 10, 0]} intensity={3} /> {/* Increased directional light */}
+        <hemisphereLight intensity={1.5} color={new THREE.Color(0xFFFFFF)} groundColor={new THREE.Color(0x444444)} position={[10, 10, 10]} />
 
+        <group position={[0, -height / 2, 0]}>
+          <Floor texture={floorTexture} width={width} depth={depth} />
+          <Wall texture={wallTexture} position={[0, height / 2, -depth / 2]} rotation={[0, 0, 0]} width={width} height={height} />
+          <Wall texture={wallTexture} position={[0, height / 2, depth / 2]} rotation={[0, Math.PI, 0]} width={width} height={height} />
+          <Wall texture={wallTexture} position={[-width / 2, height / 2, 0]} rotation={[0, Math.PI / 2, 0]} width={depth} height={height} />
+          <Wall texture={wallTexture} position={[width / 2, height / 2, 0]} rotation={[0, -Math.PI / 2, 0]} width={depth} height={height} />
+        </group>
 
-      {/* Toggle View Buttons */}
-      <div className="absolute top-4 left-4 z-10 space-x-4">
-        <button onClick={() => setView('room')} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400">Room</button>
-        <button onClick={() => setView('stairs')} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-400">Stairs</button>
+        <OrbitControls enablePan enableZoom enableRotate />
+      </Canvas>
       </div>
 
-      <Canvas camera={{ position: [15, 15, 15], fov: 50 }} className="h-full">
-        {/* Lighting Setup */}
-        <ambientLight intensity={1.2} />
-        <directionalLight position={[5, 10, 5]} intensity={1.5} castShadow />
-        <pointLight position={[0, 5, 0]} intensity={1.5} />
+      <div className="w-full max-w-6xl bg-white rounded-xl shadow-lg p-6 mt-4">
+        <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
+          <label className="text-lg font-medium flex flex-col items-center">
+            Floor Texture:
+            <Select
+              options={productOptions}
+              onChange={(option) => {
+                if (option) {
+                  handleTextureChange(option.value, true); // Set the floor texture
+                }
+              }}
+              getOptionLabel={(e) => e.label}
+              formatOptionLabel={customFormatOptionLabel}
+              menuPlacement="top"
+              className="mt-2"
+            />
+          </label>
 
-        {/* Conditional rendering based on selected view */}
-        {view === 'room' && <Room dimensions={dimensions} wallColor={wallColor} floorColor={floorColor} />}
-        {view === 'stairs' && <Stairs numSteps={stairsSettings.numSteps} stepHeight={stairsSettings.stepHeight} roomDimensions={dimensions} stairColor={stairColor} />}
+          <label className="text-lg font-medium flex flex-col items-center">
+            Wall Texture:
+            <Select
+              options={productOptions}
+              onChange={(option) => {
+                if (option) {
+                  handleTextureChange(option.value, false); // Set the wall texture
+                }
+              }}
+              getOptionLabel={(e) => e.label}
+              formatOptionLabel={customFormatOptionLabel}
+              menuPlacement="top"
+              className="mt-2"
+            />
+          </label>
+        </div>
 
-        <OrbitControls />
-      </Canvas>
-
-      {/* Customization Controls */}
-      <div className="absolute bottom-0 left-0 w-full p-4 bg-white shadow-lg flex justify-center gap-8">
-        {view === 'room' && (
-          <>
-            <div>
-              <label className="block text-sm text-gray-700">Width</label>
-              <input
-                type="range"
-                min="5"
-                max="20"
-                value={dimensions.width}
-                onChange={(e) => setDimensions((prev) => ({ ...prev, width: parseFloat(e.target.value) }))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-700">Height</label>
-              <input
-                type="range"
-                min="5"
-                max="20"
-                value={dimensions.height}
-                onChange={(e) => setDimensions((prev) => ({ ...prev, height: parseFloat(e.target.value) }))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-700">Depth</label>
-              <input
-                type="range"
-                min="5"
-                max="20"
-                value={dimensions.depth}
-                onChange={(e) => setDimensions((prev) => ({ ...prev, depth: parseFloat(e.target.value) }))}
-                className="w-full"
-              />
-            </div>
-            {/* Color Pickers for Room */}
-            <div>
-              <label className="block text-sm text-gray-700">Wall Color</label>
-              <input
-                type="color"
-                value={wallColor}
-                onChange={(e) => setWallColor(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-700">Floor Color</label>
-              <input
-                type="color"
-                value={floorColor}
-                onChange={(e) => setFloorColor(e.target.value)}
-                className="w-full"
-              />
-            </div>
-          </>
-        )}
-
-        {view === 'stairs' && (
-          <>
-            <div>
-              <label className="block text-sm text-gray-700">Number of Steps</label>
-              <input
-                type="range"
-                min="3"
-                max="10"
-                value={stairsSettings.numSteps}
-                onChange={(e) => setStairsSettings((prev) => ({ ...prev, numSteps: parseInt(e.target.value) }))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-700">Step Height</label>
-              <input
-                type="range"
-                min="0.2"
-                max="1"
-                step="0.1"
-                value={stairsSettings.stepHeight}
-                onChange={(e) => setStairsSettings((prev) => ({ ...prev, stepHeight: parseFloat(e.target.value) }))}
-                className="w-full"
-              />
-            </div>
-            {/* Color Picker for Stairs */}
-            <div>
-              <label className="block text-sm text-gray-700">Stair Color</label>
-              <input
-                type="color"
-                value={stairColor}
-                onChange={(e) => setStairColor(e.target.value)}
-                className="w-full"
-              />
-            </div>
-          </>
-        )}
+        {/* Sliders for dimensions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <label className="flex flex-col items-center text-lg font-medium">
+            Width: {width}
+            <input type="range" min={5} max={30} value={width} onChange={(e) => setWidth(Number(e.target.value))} className="w-full mt-2" />
+          </label>
+          <label className="flex flex-col items-center text-lg font-medium">
+            Depth: {depth}
+            <input type="range" min={5} max={30} value={depth} onChange={(e) => setDepth(Number(e.target.value))} className="w-full mt-2" />
+          </label>
+          <label className="flex flex-col items-center text-lg font-medium">
+            Height: {height}
+            <input type="range" min={5} max={20} value={height} onChange={(e) => setHeight(Number(e.target.value))} className="w-full mt-2" />
+          </label>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Visualizer;
+export default ThreeDModel;

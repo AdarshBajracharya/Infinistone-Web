@@ -21,12 +21,12 @@ const Login: React.FC = () => {
         const userId = response.data.userId;
         const isAdmin = response.data.isAdmin;
   
-        console.log('isAdmin:', isAdmin); // 👈 Check the actual value
+        console.log('isAdmin:', isAdmin); 
   
         localStorage.setItem('loginToken', token);
         localStorage.setItem('userId', userId);
   
-        if (isAdmin === 'true' || isAdmin === true) { // Handles both string and boolean
+        if (isAdmin === 'true' || isAdmin === true) { 
           navigate('/admin');
         } else {
           navigate('/home');
