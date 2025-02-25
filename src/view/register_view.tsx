@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import backgroundImage from '../assets/background_login.jpg';
-import { useRegister } from './query'; // Adjust the import path
-import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import { useRegister } from './query'; 
+import { useNavigate } from "react-router-dom"; 
 
 const Register: React.FC = () => {
   const { register, handleSubmit } = useForm();
-  const [profilePicture, setProfilePicture] = useState<string | null>(null); // State to store the uploaded image
-  const registerMutation = useRegister(); // Initialize the useRegister mutation
-  const navigate = useNavigate(); // Initialize useNavigate for redirection
+  const [profilePicture, setProfilePicture] = useState<string | null>(null); 
+  const registerMutation = useRegister(); 
+  const navigate = useNavigate(); 
 
   const onSubmit = (data: any) => {
     // Include the profile picture in the form data
@@ -19,14 +19,14 @@ const Register: React.FC = () => {
       phone: data.phoneNumber,
       address: data.address,
       password: data.password,
-      image: profilePicture, // Add the profile picture (base64 string)
+      image: profilePicture, 
     };
 
     // Call the register mutation
     registerMutation.mutate(formData, {
       onSuccess: (response) => {
         console.log("Registration successful:", response.data);
-        navigate("/"); // Redirect to the login page after successful registration
+        navigate("/");
       },
       onError: (error) => {
         console.error("Registration failed:", error);
@@ -39,9 +39,9 @@ const Register: React.FC = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfilePicture(reader.result as string); // Set the image URL
+        setProfilePicture(reader.result as string);
       };
-      reader.readAsDataURL(file); // Convert the file to a data URL
+      reader.readAsDataURL(file); 
     }
   };
 
