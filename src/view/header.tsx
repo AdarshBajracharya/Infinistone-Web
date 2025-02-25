@@ -7,13 +7,13 @@ const Header: React.FC = () => {
         <a href="/home" className="text-white hover:text-yellow-400 transition-colors duration-300">
           Home
         </a>
-        <a href="#" className="text-white hover:text-yellow-400 transition-colors duration-300">
+        <a href="/shop" className="text-white hover:text-yellow-400 transition-colors duration-300">
           Browse Stones
         </a>
         <a href="/visualizer" className="text-white hover:text-yellow-400 transition-colors duration-300">
           Visualizer
         </a>
-        <a href="#" className="text-white hover:text-yellow-400 transition-colors duration-300">
+        <a href="/profile" className="text-white hover:text-yellow-400 transition-colors duration-300">
           Profile
         </a>
       </nav>
