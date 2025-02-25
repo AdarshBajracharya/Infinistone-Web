@@ -33,7 +33,7 @@ const AdminPage: React.FC = () => {
       onSuccess: () => {
         alert("Product added successfully!");
         setNewProduct({ item_name: "", item_type: "", item_description: "", item_price: 0, image: "" });
-        refetch();  // Refetch products to update the list dynamically
+        refetch();  
       },
     });
   };
@@ -42,7 +42,7 @@ const AdminPage: React.FC = () => {
     deleteProduct(id, {
       onSuccess: () => {
         alert("Product deleted successfully!");
-        refetch();  // Refetch products to update the list dynamically
+        refetch(); 
       },
     });
   };
@@ -53,9 +53,8 @@ const AdminPage: React.FC = () => {
       return;
     }
   
-    // Ensure the product ID is renamed to "id"
     const updatedProduct = {
-      id: selectedProduct._id, // Change _id to id
+      id: selectedProduct._id, 
       item_name: selectedProduct.item_name,
       item_type: selectedProduct.item_type,
       item_description: selectedProduct.item_description,
@@ -66,15 +65,14 @@ const AdminPage: React.FC = () => {
     updateProduct(updatedProduct, {
       onSuccess: () => {
         alert("Product updated successfully!");
-        setSelectedProduct(null); // Clear the selection after updating
-        refetch();  // Refetch products to update the list dynamically
+        setSelectedProduct(null); 
+        refetch();  
       },
     });
   };
 
   const handleLogout = () => {
-    // Perform any logout actions (e.g., clearing session or tokens) here
-    navigate("/");  // Redirect to the home page
+    navigate("/");  
   };
 
   return (
@@ -82,12 +80,21 @@ const AdminPage: React.FC = () => {
       {/* Custom Header with Logout Button */}
       <div className="bg-black text-white p-4 flex justify-between items-center text-white">
         <h1 className="text-3xl font-bold">Admin Panel</h1>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700"
-        >
-          Logout
-        </button>
+        <div className="flex gap-4">
+    <button
+      onClick={() => navigate("/bookings")} 
+      className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700"
+    >
+      View Bookings
+    </button>
+
+    <button
+      onClick={handleLogout}
+      className="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700"
+    >
+      Logout
+    </button>
+  </div>
       </div>
 
       <div className="py-8">
