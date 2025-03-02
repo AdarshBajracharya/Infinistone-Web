@@ -4,7 +4,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; // Imp
 import Login from './view/login_view.tsx';
 import Register from './view/register_view.tsx';
 import Dashboard from './view/dashboard_view.tsx';
-import RoomVisualizer from './view/visualizer.tsx';
+import ShopPage from './view/shop_view.tsx';
+import ProfilePage from './view/profile_view.tsx';
+import ProductDetail from './view/product_detail.tsx';
+import ThreeDModel from './view/visualizer.tsx';
+import AdminPage from './view/add_product_view.tsx';
+import BookingsPage from './view/bookings.tsx';
 
 // Create a QueryClient instance
 const queryClient = new QueryClient();
@@ -22,9 +27,33 @@ const router = createBrowserRouter([
     path: '/home',
     element: <Dashboard />,
   },
+  // {
+  //   path: '/visualizer',
+  //   element: <Visualizer />,
+  // },
+  {
+    path: '/shop',
+    element: <ShopPage />,
+  },
+  {
+    path: '/profile',
+    element: <ProfilePage />,
+  },
+  {
+    path: '/admin',
+    element: <AdminPage />,
+  },
+  {
+    path: '/product/:id',
+    element: <ProductDetail />,
+  },
   {
     path: '/visualizer',
-    element: <RoomVisualizer />,
+    element: <ThreeDModel />,
+  },
+  {
+    path: '/bookings',
+    element: <BookingsPage />,
   },
 ]);
 

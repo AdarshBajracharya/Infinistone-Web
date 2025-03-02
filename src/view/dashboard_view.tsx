@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
           {/* Button */}
           <button
             className="bg-black text-white py-3 px-8 rounded-full hover:bg-gray-900 transition-all"
-            onClick={() => alert('Button clicked!')}
+            onClick={() => navigate('/visualizer')}
           >
             Get Started
           </button>
